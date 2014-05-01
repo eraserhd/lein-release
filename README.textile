@@ -67,6 +67,17 @@ pre. :lein-release {:deploy-via :clojars
 
 This can be used to change the default clojars target url, particularly useful if you run your own internal instance of clojars.
 
+h3. @:tag-format@
+
+pre. :lein-release {:tag-format ["v" :version]}
+
+This specifies the format of the SCM tag.  The above specifies that "v1.2.3" will be the tag for version 1.2.3.  The following keywords can be used:
+
+* @:version@
+* @:project-name@
+
+@:version@ is the version being released, while @:project-name@ is the name of the project.  The default format is @[:project-name "-" :version]@.
+
 h2. Example Configuration
 
 pre. (defproject org.clojars.relaynetwork/clj-avro "1.0.9-SNAPSHOT"

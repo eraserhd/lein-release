@@ -10,7 +10,8 @@
 
 (def default-clojars-url "clojars@clojars.org:")
 
-(def ^:dynamic config {:clojars-url default-clojars-url})
+(def ^:dynamic config {:tag-format [:project-name "-" :version],
+                       :clojars-url default-clojars-url})
 
 (def scm-systems
      {:git {:add    ["git" "add"]
@@ -192,8 +193,17 @@
 
 )
 
+(defn compute-tag-name
+  [config values]
+  (->> (:tag-format config)
+       (map (fn [tag-name-part]
+              (if (keyword? tag-name-part)
+                (tag-name-part values)
+                tag-name-part)))
+       (apply str)))
+
 (defn release [project & args]
-  (binding [config (or (:lein-release project) config)]
+  (binding [config (merge config (or (:lein-release project) {}))]
     (let [current-version  (get project :version)
           release-version  (compute-release-version current-version)
           next-dev-version (compute-next-development-version (.replaceAll current-version "-SNAPSHOT" ""))
@@ -205,7 +215,8 @@
         (println "adding, committing and tagging project.clj")
         (scm! :add "project.clj")
         (scm! :commit "-m" (format "lein-release plugin: preparing %s release" release-version))
-        (scm! :tag (format "%s-%s" (:name project) release-version)))
+        (scm! :tag (compute-tag-name config {:project-name (:name project)
+                                             :version release-version})))
       (when-not (.exists (java.io.File. jar-file-name))
         (println "creating jar and pom files...")
         (sh! "lein" "jar")
